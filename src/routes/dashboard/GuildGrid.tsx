@@ -14,20 +14,20 @@ export const DashboardGuildGrid = ({
 }: GuildGridProps) => {
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {guilds.map((guild) => {
-        console.log(guild.name);
-        return (
+      {guilds.map((guild) => (
           <div
             key={guild.id}
             className={[
-              'group rounded-2xl border bg-white p-5 shadow-sm transition',
+              'group rounded-2xl border bg-white p-5 shadow-sm transition dark:bg-slate-800',
               'hover:-translate-y-0.5 hover:shadow-md',
-              String(guild.id) === activeGuildId ? 'border-sky-200 ring-2 ring-sky-200/60' : 'border-slate-200',
+              String(guild.id) === activeGuildId
+                ? 'border-sky-200 ring-2 ring-sky-200/60 dark:border-sky-700 dark:ring-sky-700/40'
+                : 'border-slate-200 dark:border-slate-700',
             ].join(' ')}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-sm font-semibold text-slate-700">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-sm font-semibold text-slate-700 dark:bg-slate-700">
                   {guild.icon_url ? (
                     <img
                       src={guild.icon_url}
@@ -52,7 +52,7 @@ export const DashboardGuildGrid = ({
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     {guild.plan && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold capitalize text-slate-700">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold capitalize text-slate-700 dark:bg-slate-700">
                         {guild.plan === 'pro' && (
                           <FaRobot className="text-[10px] text-sky-400" />
                         )}
@@ -97,8 +97,7 @@ export const DashboardGuildGrid = ({
               )}
             </div>
           </div>
-        );
-      })}
+      ))}
     </div>
   );
 };

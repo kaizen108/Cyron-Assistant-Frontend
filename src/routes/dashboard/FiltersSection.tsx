@@ -16,8 +16,8 @@ export const DashboardFiltersSection = ({
   onReset,
 }: FiltersSectionProps) => {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-800/90 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-600 dark:bg-slate-900">
         <span className="text-slate-400">
           <FaSearch />
         </span>
@@ -35,7 +35,7 @@ export const DashboardFiltersSection = ({
           onChange={(e) =>
             onFilterChange(e.target.value as 'all' | 'installed' | 'uninstalled')
           }
-          className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 shadow-sm focus:outline-none"
+          className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 shadow-sm focus:outline-none dark:border-slate-600 dark:bg-slate-900"
         >
           <option value="all">All Servers</option>
           <option value="installed">Installed</option>
@@ -45,7 +45,7 @@ export const DashboardFiltersSection = ({
         <button
           type="button"
           onClick={onReset}
-          className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:hover:bg-slate-800"
         >
           Reset
         </button>

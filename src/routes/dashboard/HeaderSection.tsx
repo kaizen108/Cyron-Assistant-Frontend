@@ -15,7 +15,7 @@ export const DashboardHeaderSection = ({
   onAddBot,
 }: HeaderSectionProps) => {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-indigo-50 p-8 shadow-soft sm:p-10">
+    <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-indigo-50 p-8 shadow-soft dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 sm:p-10">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900 flex items-center gap-2">
@@ -33,7 +33,7 @@ export const DashboardHeaderSection = ({
               <FaServer className="text-slate-400" />
               Selected:
             </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-900">
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-900 dark:border-slate-600 dark:bg-slate-800/90">
               <span className="h-2 w-2 rounded-full bg-sky-500" />
               {selectedGuild.name}
             </span>
@@ -60,7 +60,7 @@ export const DashboardHeaderSection = ({
       </div>
 
       <div className="mt-8 grid gap-5 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm flex flex-col gap-1">
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm flex flex-col gap-1 dark:border-slate-600 dark:bg-slate-800/90">
           <div className="flex items-center gap-2">
             <FaServer className="text-base text-slate-400" />
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 m-0">
@@ -71,7 +71,7 @@ export const DashboardHeaderSection = ({
             {isLoading ? '—' : stats.total}
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm flex flex-col gap-1">
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm flex flex-col gap-1 dark:border-slate-600 dark:bg-slate-800/90">
           <div className="flex items-center gap-2">
             <FaRobot className="text-base text-slate-400" />
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 m-0">
@@ -82,7 +82,7 @@ export const DashboardHeaderSection = ({
             {isLoading ? '—' : stats.botInstalled}
           </p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm flex flex-col gap-1">
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm flex flex-col gap-1 dark:border-slate-600 dark:bg-slate-800/90">
           <div className="flex items-center gap-2">
             <FaTicketAlt className="text-base text-slate-400 " />
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 m-0">

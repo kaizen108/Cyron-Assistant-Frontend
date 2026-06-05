@@ -2,7 +2,7 @@ import { FaSearch, FaServer } from 'react-icons/fa';
 
 export const DashboardEmptyState = () => {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <p className="text-sm font-semibold text-slate-900 flex items-center justify-center gap-2">
         <FaServer className="text-xl text-slate-300" />
         No servers found
