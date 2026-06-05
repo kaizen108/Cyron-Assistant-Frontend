@@ -12,7 +12,7 @@ export const PricingPlans = () => {
   const businessPlan = pricingPlans.find((p) => p.id === 'business');
 
   return (
-    <section className="border-b border-slate-200 bg-white">
+    <section className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="mb-12 text-center md:text-left md:gap-6">
           <div>

@@ -2,9 +2,9 @@ import { FaEnvelope, FaQuestionCircle } from 'react-icons/fa';
 
 export const ContactSection = () => {
   return (
-    <section className="bg-white">
+    <section className="bg-white dark:bg-slate-900">
       <div className="mx-auto max-w-6xl px-4 py-12">
-        <div className="flex flex-col items-center justify-between gap-6 rounded-2xl border border-slate-200 bg-slate-50 px-6 py-8 text-center md:flex-row md:text-left">
+        <div className="flex flex-col items-center justify-between gap-6 rounded-2xl border border-slate-200 bg-slate-50 px-6 py-8 text-center dark:border-slate-700 dark:bg-slate-800 md:flex-row md:text-left">
           <div>
             <h2 className="flex items-center text-xl font-semibold text-slate-900">
               <FaQuestionCircle className="mr-2" />

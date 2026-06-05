@@ -10,7 +10,7 @@ import {
 
 export const PremiumHeroSection = () => {
   return (
-    <section className="border-b border-slate-200 bg-gradient-to-br from-sky-50 via-white to-sky-100">
+    <section className="border-b border-slate-200 bg-gradient-to-br from-sky-50 via-white to-sky-100 dark:border-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-20 md:flex-row md:items-center">
         <div className="flex-1 space-y-5">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl md:text-5xl drop-shadow-md">
@@ -29,7 +29,7 @@ export const PremiumHeroSection = () => {
 
         <div className="flex-1">
           <motion.div
-            className="grid gap-5 rounded-3xl border border-sky-100 bg-white p-6 shadow-soft sm:grid-cols-2"
+            className="grid gap-5 rounded-3xl border border-sky-100 bg-white p-6 shadow-soft dark:border-slate-700 dark:bg-slate-800 sm:grid-cols-2"
             initial={{ opacity: 0, scale: 0.87 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, amount: 0.25 }}

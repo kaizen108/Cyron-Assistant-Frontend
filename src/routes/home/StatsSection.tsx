@@ -12,7 +12,7 @@ export const StatsSection = () => {
   const response = byId('response');
 
   return (
-    <section className="border-b border-slate-200 bg-gradient-to-br from-sky-50 via-white to-indigo-50 text-slate-900">
+    <section className="border-b border-slate-200 bg-gradient-to-br from-sky-50 via-white to-indigo-50 text-slate-900 dark:border-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
@@ -36,7 +36,7 @@ export const StatsSection = () => {
           }}
         >
           <motion.div
-            className="rounded-2xl border border-sky-200 bg-white px-5 py-6 shadow-lg text-center"
+            className="rounded-2xl border border-sky-200 bg-white px-5 py-6 shadow-lg text-center dark:border-slate-700 dark:bg-slate-800"
             variants={{
               hidden: { opacity: 0, y: 40 },
               visible: { opacity: 1, y: 0 },
@@ -58,7 +58,7 @@ export const StatsSection = () => {
           </motion.div>
 
           <motion.div
-            className="rounded-2xl border border-cyan-200 bg-white px-5 py-6 shadow-lg text-center"
+            className="rounded-2xl border border-cyan-200 bg-white px-5 py-6 shadow-lg text-center dark:border-slate-700 dark:bg-slate-800"
             variants={{
               hidden: { opacity: 0, y: 40 },
               visible: { opacity: 1, y: 0 },
@@ -80,7 +80,7 @@ export const StatsSection = () => {
           </motion.div>
 
           <motion.div
-            className="rounded-2xl border border-indigo-200 bg-white px-5 py-6 shadow-lg text-center"
+            className="rounded-2xl border border-indigo-200 bg-white px-5 py-6 shadow-lg text-center dark:border-slate-700 dark:bg-slate-800"
             variants={{
               hidden: { opacity: 0, y: 40 },
               visible: { opacity: 1, y: 0 },
@@ -102,7 +102,7 @@ export const StatsSection = () => {
           </motion.div>
 
           <motion.div
-            className="rounded-2xl border border-amber-200 bg-white px-5 py-6 shadow-lg text-center"
+            className="rounded-2xl border border-amber-200 bg-white px-5 py-6 shadow-lg text-center dark:border-slate-700 dark:bg-slate-800"
             variants={{
               hidden: { opacity: 0, y: 40 },
               visible: { opacity: 1, y: 0 },

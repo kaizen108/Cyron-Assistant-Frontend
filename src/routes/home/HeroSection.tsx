@@ -20,10 +20,10 @@ export const HeroSection = ({ isAuthenticated, loginWithDiscord }: HeroSectionPr
   );
 
   return (
-    <section className="border-b border-slate-200 bg-gradient-to-br from-sky-50 via-white to-indigo-50">
+    <section className="border-b border-slate-200 bg-gradient-to-br from-sky-50 via-white to-indigo-50 dark:border-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 py-20 text-center md:flex-row md:items-center md:text-left">
         <div className="flex-1 space-y-6">
-          <div className="inline-flex items-center rounded-full bg-sky-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 drop-shadow-md">
+          <div className="inline-flex items-center rounded-full bg-sky-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 drop-shadow-md dark:bg-sky-900/40 dark:text-sky-300">
             <FaDiscord className="mr-2" size={20} color="#5865F2" /> AI Ticket Bot for Discord
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl md:text-5xl drop-shadow-md">
@@ -56,7 +56,7 @@ export const HeroSection = ({ isAuthenticated, loginWithDiscord }: HeroSectionPr
             </PrimaryCtaButton>
             <Link
               to="/docs"
-              className="inline-flex items-center justify-center rounded-[5px] border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center rounded-[5px] border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             >
               <FaBook className="mr-2" />
               Documentation
@@ -68,7 +68,7 @@ export const HeroSection = ({ isAuthenticated, loginWithDiscord }: HeroSectionPr
         </div>
         <div className="flex-1">
           <motion.div
-            className="mx-auto max-w-md rounded-3xl border border-sky-100 bg-white/80 p-4 shadow-xl shadow-sky-100"
+            className="mx-auto max-w-md rounded-3xl border border-sky-100 bg-white/80 p-4 shadow-xl shadow-sky-100 dark:border-slate-700 dark:bg-slate-800/90 dark:shadow-black/40"
             initial={{ opacity: 0, y: 32, scale: 0.87 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, amount: 0.6 }}
@@ -80,7 +80,7 @@ export const HeroSection = ({ isAuthenticated, loginWithDiscord }: HeroSectionPr
                 Live dashboard
               </span>
             </div>
-            <div className="h-40 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-4 text-left text-xs text-slate-700">
+            <div className="h-40 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-4 text-left text-xs text-slate-700 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800">
               <p className="font-semibold text-slate-900 flex items-center">AI Ticket Bot in action</p>
               <p className="mt-2 leading-relaxed">
                 <span className="flex items-center">

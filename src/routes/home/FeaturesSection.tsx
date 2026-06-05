@@ -3,7 +3,7 @@ import { FaChartBar, FaRobot, FaSlidersH } from 'react-icons/fa';
 
 export const FeaturesSection = () => {
   return (
-    <section className="border-b border-slate-200 bg-white">
+    <section className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="mb-10 text-center">
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">

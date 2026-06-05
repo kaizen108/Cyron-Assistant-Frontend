@@ -15,7 +15,7 @@ export const Premium = () => {
     <>
       <TopNav currentGuildName={null} />
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-slate-50 text-slate-900">
+        <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-slate-50 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
           <PremiumHeroSection />
         <PricingPlans />
         <PremiumUnlocksSection />

@@ -17,7 +17,7 @@ export const Home = () => {
     <>
       <TopNav currentGuildName={null} />
       <PageTransition>
-        <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-slate-50">
+        <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
           <HeroSection isAuthenticated={isAuthenticated} loginWithDiscord={loginWithDiscord} />
           <StatsSection />
           <FeaturesSection />

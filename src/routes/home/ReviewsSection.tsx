@@ -5,7 +5,7 @@ import { useApp } from '../../context/AppContext';
 export const ReviewsSection = () => {
   const { reviews } = useApp();
   return (
-    <section className="border-b border-slate-200 bg-slate-50">
+    <section className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
