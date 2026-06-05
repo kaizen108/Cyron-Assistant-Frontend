@@ -1,0 +1,224 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+import { KnowledgeModal } from '../../components/KnowledgeModal';
+import { ProblemModal } from '../../components/ProblemModal';
+import { useSettings } from '../../hooks/useSettings';
+
+import { KnowledgeTab } from './KnowledgeTab';
+import { AiSettingsTab } from './AiSettingsTab';
+import { EmbedSettingsTab } from './EmbedSettingsTab';
+import { UsageTab } from './UsageSettingsTab';
+import { SystemPromptPreviewModal } from './SystemPromptPreviewModal';
+import { ToastAlert } from './ToastAlert';
+
+function knowledgeEntryToHtml(entry: KnowledgeEntry | null): string {
+  if (!entry) return '';
+  const raw = (entry.main_content ?? entry.content ?? '').trim();
+  if (!raw) return '';
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return raw
+    .split('\n')
+    .filter((line) => line.length > 0)
+    .map((line) => `<p>${esc(line)}</p>`)
+    .join('');
+}
+
+export const Settings = () => {
+  const [localTone, setLocalTone] = useState<Tone>('Professional');
+  const {
+    guildId,
+    view,
+    guild,
+    guildLoading,
+    guildError,
+    usage,
+    usageLoading,
+    usageError,
+    historyLoading,
+    historyError,
+    logsLoading,
+    logsError,
+    knowledge,
+    knowledgeLoading,
+    knowledgeError,
+    systemPrompt,
+    setSystemPrompt,
+    previewOpen,
+    setPreviewOpen,
+    testReply,
+    setTestReply,
+    embedColor,
+    setEmbedColor,
+    toast,
+    setToast,
+    modalOpen,
+    setModalOpen,
+    modalMode,
+    setModalMode,
+    editingEntry,
+    setEditingEntry,
+    handleSavePrompt,
+    handleSaveEmbedColor,
+    openCreateModal,
+    openProblemModal,
+    problemModalOpen,
+    setProblemModalOpen,
+    openEditModal,
+    handleSubmitKnowledge,
+    handleAutoFormat,
+    handleSubmitProblem,
+    handleDeleteKnowledge,
+    createKnowledgePending,
+    updateKnowledgePending,
+    deleteKnowledgePending,
+    updateGuildPending,
+    totalChars,
+    maxChars,
+    usageRatio,
+    showUpgradeBanner,
+    planLabel,
+    isProOrBusiness,
+    chartData,
+    recentActivity,
+  } = useSettings();
+
+  if (!guildId) {
+    return (
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-primary/5 via-white to-purple-50 px-6 py-12 text-center shadow-soft"
+      >
+        <h2 className="text-lg font-semibold tracking-tight">Select a server</h2>
+        <p className="mt-2 max-w-md text-sm text-text-muted">
+          Choose a server from the sidebar to manage AI settings, embed color, and usage.
+        </p>
+      </motion.section>
+    );
+  }
+
+  if (guildError || (!guildLoading && !guild)) {
+    return (
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="rounded-xl bg-white p-6 shadow-soft"
+      >
+        <p className="text-sm text-red-500">Failed to load guild. Please refresh the page.</p>
+      </motion.section>
+    );
+  }
+
+  return (
+    <>
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className="space-y-6"
+      >
+        <AnimatePresence mode="wait">
+          {view === 'ai' && (
+            <AiSettingsTab
+              systemPrompt={systemPrompt}
+              setSystemPrompt={setSystemPrompt}
+              previewOpen={previewOpen}
+              setPreviewOpen={setPreviewOpen}
+              handleSavePrompt={handleSavePrompt}
+              updateGuildPending={updateGuildPending}
+              guildLoading={guildLoading}
+              localTone={localTone}
+              setLocalTone={setLocalTone}
+              testReply={testReply}
+              setTestReply={setTestReply}
+            />
+          )}
+
+          {view === 'embed' && (
+            <EmbedSettingsTab
+              embedColor={embedColor}
+              setEmbedColor={setEmbedColor}
+              isProOrBusiness={isProOrBusiness}
+              updateGuildPending={updateGuildPending}
+              guildLoading={guildLoading}
+              handleSaveEmbedColor={handleSaveEmbedColor}
+            />
+          )}
+
+          {view === 'usage' && (
+            <UsageTab
+              usage={usage}
+              usageLoading={usageLoading}
+              usageError={usageError}
+              historyLoading={historyLoading}
+              historyError={historyError}
+              logsLoading={logsLoading}
+              logsError={logsError}
+              chartData={chartData}
+              recentActivity={recentActivity}
+            />
+          )}
+
+          {view === 'knowledge' && (
+            <KnowledgeTab
+              knowledge={knowledge}
+              knowledgeLoading={knowledgeLoading}
+              knowledgeError={knowledgeError}
+              openCreateModal={openCreateModal}
+              openProblemModal={openProblemModal}
+              openEditModal={openEditModal}
+              handleDeleteKnowledge={handleDeleteKnowledge}
+              deleteKnowledgePending={deleteKnowledgePending}
+              totalChars={totalChars}
+              maxChars={maxChars}
+              usageRatio={usageRatio}
+              showUpgradeBanner={showUpgradeBanner}
+              planLabel={planLabel}
+            />
+          )}
+        </AnimatePresence>
+      </motion.section>
+
+      <SystemPromptPreviewModal
+        previewOpen={previewOpen}
+        setPreviewOpen={setPreviewOpen}
+        systemPrompt={systemPrompt}
+      />
+
+      <KnowledgeModal
+        isOpen={modalOpen}
+        mode={modalMode}
+        serverName={guild?.name ?? ''}
+        guildId={guildId}
+        initialTitle={editingEntry?.title ?? ''}
+        initialSource={editingEntry?.source ?? ''}
+        initialContentHtml={knowledgeEntryToHtml(editingEntry)}
+        initialTemplateType={editingEntry?.template_type ?? 'general_knowledge'}
+        onClose={() => {
+          if (createKnowledgePending || updateKnowledgePending) return;
+          setModalOpen(false);
+          setEditingEntry(null);
+        }}
+        onSubmit={handleSubmitKnowledge}
+        onAutoFormat={handleAutoFormat}
+        isSubmitting={createKnowledgePending || updateKnowledgePending}
+      />
+
+      <ProblemModal
+        isOpen={problemModalOpen}
+        serverName={guild?.name ?? ''}
+        onClose={() => {
+          if (createKnowledgePending) return;
+          setProblemModalOpen(false);
+        }}
+        onSubmit={handleSubmitProblem}
+        isSubmitting={createKnowledgePending}
+      />
+
+      <ToastAlert toast={toast} />
+    </>
+  );
+};
