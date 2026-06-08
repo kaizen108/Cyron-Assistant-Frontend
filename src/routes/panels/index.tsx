@@ -127,22 +127,9 @@ export function Panels() {
 
   return (
     <div className="p-4 md:p-6 max-w-4xl">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg md:text-xl font-semibold text-slate-900">Ticket Panels</h2>
         <button onClick={openCreate} className="rounded-xl bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-700">+ New Panel</button>
-      </div>
-
-      <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-slate-700">
-        <p className="font-medium text-sky-900">How to publish a panel on Discord</p>
-        <ol className="mt-2 list-decimal space-y-1 pl-5 text-slate-600">
-          <li>Create and save your panel here (link an AI Context under <strong>General</strong>).</li>
-          <li>In Discord, run <code className="rounded bg-white px-1.5 py-0.5 text-xs font-mono text-sky-800">/setup</code> once if you have not already.</li>
-          <li>Open the channel where members should open tickets (e.g. <strong>#support</strong>).</li>
-          <li>Run <code className="rounded bg-white px-1.5 py-0.5 text-xs font-mono text-sky-800">/sendpanel</code> (Administrator required).</li>
-        </ol>
-        <p className="mt-2 text-xs text-slate-500">
-          Saving here only stores settings — it does not post to Discord. Run <code className="font-mono">/sendpanel</code> again after edits to post an updated panel.
-        </p>
       </div>
 
       {panels.length === 0 && <p className="text-slate-500 text-sm">No panels yet. Create one to get started.</p>}
@@ -159,13 +146,6 @@ export function Panels() {
                 </div>
                 <p className="text-xs text-slate-500">
                   Category: {p.ticket_category_name} · Button: {p.button_text} · Context: {ctx?.name ?? '—'}
-                </p>
-                <p className="mt-1 text-xs">
-                  {p.published_channel_id ? (
-                    <span className="text-emerald-600">Published on Discord — run /sendpanel again to post an update</span>
-                  ) : (
-                    <span className="text-amber-600">Not published — run /sendpanel in Discord</span>
-                  )}
                 </p>
               </div>
               <div className="flex gap-2">
