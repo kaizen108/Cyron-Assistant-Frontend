@@ -9,7 +9,8 @@ export const DashboardEmptyState = () => {
       </p>
       <p className="mt-1 text-sm text-slate-600 flex items-center justify-center gap-1">
         <FaSearch className="text-xs" />
-        Try a different search or filter.
+        Try a different search or filter, or log out and sign in again to refresh your
+        Discord servers.
       </p>
     </div>
   );

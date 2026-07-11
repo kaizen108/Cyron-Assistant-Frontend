@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
-// @ts-expect-error react-alert ships without TS types in this repo
 import { useAlert } from 'react-alert';
 import { api } from '../../lib/api';
 import { DISCORD_BOT_INVITE_URL } from '../../lib/config';
@@ -20,7 +19,7 @@ async function fetchGuilds(): Promise<Guild[]> {
 export const Dashboard = () => {
   const params = useParams<{ guildId?: string }>();
   const alert = useAlert();
-  const { data: guilds, isLoading, isError } = useQuery({
+  const { data: guilds, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['guilds'],
     queryFn: fetchGuilds,
   });
@@ -29,7 +28,9 @@ export const Dashboard = () => {
   useEffect(() => {
     if (!isError || hasShownGuildError.current) return;
     hasShownGuildError.current = true;
-    alert.error('Failed to load servers. Please refresh the page.');
+    alert.error(
+      'Failed to load servers. Try again, or log out and sign in with Discord to refresh your server list.',
+    );
   }, [alert, isError]);
 
   const selectedGuild =
@@ -100,10 +101,27 @@ export const Dashboard = () => {
       )}
 
       {isError && !isLoading && (
-        <p className="text-sm text-red-600 flex items-center gap-2">
-          <FaServer className="text-red-400" />
-          Failed to load servers. Please refresh the page.
-        </p>
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="flex items-center gap-2 font-medium">
+            <FaServer className="text-red-400" />
+            Failed to load servers.
+          </p>
+          <p className="mt-1 text-red-600">
+            Try again below. If the problem continues, log out and sign in with Discord
+            again to refresh your server list.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              hasShownGuildError.current = false;
+              void refetch();
+            }}
+            disabled={isFetching}
+            className="mt-3 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+          >
+            {isFetching ? 'Retrying…' : 'Retry'}
+          </button>
+        </div>
       )}
 
       {!isLoading && !isError && filteredGuilds.length === 0 && (
