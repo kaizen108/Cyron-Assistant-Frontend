@@ -21,6 +21,11 @@ module.exports = {
       borderRadius: {
         xl: '1rem',
       },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
       transitionTimingFunction: {
         smooth: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
       },

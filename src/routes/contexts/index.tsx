@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FaBrain,
+  FaGlobeAmericas,
+  FaPlus,
+  FaTrash,
+  FaSave,
+  FaLayerGroup,
+} from "react-icons/fa";
 import { guildService } from "../../services/guildService";
 import {
   PageLoader,
@@ -10,17 +19,174 @@ import {
 
 type Tab = "instructions" | "general_info" | "problems" | "knowledge";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "instructions", label: "Instructions" },
-  { id: "general_info", label: "General Info" },
-  { id: "problems", label: "Problems" },
-  { id: "knowledge", label: "Knowledge" },
+const TABS: { id: Tab; label: string; hint: string }[] = [
+  {
+    id: "instructions",
+    label: "Instructions",
+    hint: "Always injected into every prompt for this context.",
+  },
+  {
+    id: "general_info",
+    label: "General Info",
+    hint: "General information always available to the AI (no retrieval needed).",
+  },
+  {
+    id: "problems",
+    label: "Problems",
+    hint: "Problem → solution pairs the AI can reference.",
+  },
+  {
+    id: "knowledge",
+    label: "Knowledge",
+    hint: "General knowledge entries scoped to this context.",
+  },
 ];
+
+const GLOBAL_TAB_HINT =
+  "Rules that apply to every AI reply on this server — tone, safety, escalation.";
+
+function GlobalBadge({ compact = false }: { compact?: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 font-display font-semibold uppercase tracking-wide text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300 ${
+        compact
+          ? "px-2 py-0.5 text-[10px]"
+          : "px-2.5 py-0.5 text-[10px]"
+      }`}
+    >
+      Global — all panels
+    </span>
+  );
+}
+
+function TabBar({
+  active,
+  onChange,
+  accent = "sky",
+}: {
+  active: Tab;
+  onChange: (tab: Tab) => void;
+  accent?: "sky" | "indigo";
+}) {
+  const activeClass =
+    accent === "indigo"
+      ? "bg-white text-indigo-700 shadow-sm dark:bg-slate-800 dark:text-indigo-300"
+      : "bg-white text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300";
+
+  return (
+    <div className="inline-flex flex-wrap gap-1 rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 dark:border-slate-700 dark:bg-slate-800/60">
+      {TABS.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          onClick={() => onChange(t.id)}
+          className={`rounded-xl px-4 py-2 font-sans text-sm font-medium transition-all ${
+            active === t.id
+              ? activeClass
+              : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function EditorArea({
+  value,
+  onChange,
+  placeholder,
+  minHeight = "min-h-[280px]",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  minHeight?: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/50 shadow-inner dark:border-slate-700 dark:bg-slate-900/40">
+      <div className="flex items-center gap-2 border-b border-slate-200 bg-white/80 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800/80">
+        <span className="font-mono text-[11px] font-medium uppercase tracking-widest text-slate-400">
+          Markdown
+        </span>
+      </div>
+      <textarea
+        className={`w-full resize-y border-0 bg-transparent px-5 py-4 font-mono text-[13px] leading-relaxed text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500 ${minHeight}`}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        spellCheck={false}
+      />
+    </div>
+  );
+}
+
+function PrimaryButton({
+  onClick,
+  disabled,
+  loading,
+  children,
+  variant = "sky",
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+  children: React.ReactNode;
+  variant?: "sky" | "indigo";
+}) {
+  const colors =
+    variant === "indigo"
+      ? "bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500/30"
+      : "bg-sky-600 hover:bg-sky-700 focus:ring-sky-500/30";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || loading}
+      className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-sm transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${colors}`}
+    >
+      {loading ? (
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+      ) : (
+        <FaSave className="text-xs" />
+      )}
+      {children}
+    </button>
+  );
+}
+
+function ToggleSwitch({
+  enabled,
+  onChange,
+}: {
+  enabled: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      onClick={() => onChange(!enabled)}
+      className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+        enabled ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-600"
+      }`}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+          enabled ? "translate-x-6" : "translate-x-1"
+        }`}
+      />
+    </button>
+  );
+}
 
 export function Contexts() {
   const { guildId } = useParams<{ guildId: string }>();
   const qc = useQueryClient();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>("general");
   const [tab, setTab] = useState<Tab>("instructions");
   const [instructions, setInstructions] = useState("");
   const [generalInfo, setGeneralInfo] = useState("");
@@ -50,15 +216,15 @@ export function Contexts() {
     contexts.find((c) => c.id === selectedId) ?? contexts[0] ?? null;
 
   useEffect(() => {
-    if (selected && selectedId !== selected.id) setSelectedId(selected.id);
-  }, [contexts]);
+    if (!selectedId && contexts.length > 0) setSelectedId(contexts[0].id);
+  }, [contexts, selectedId]);
 
   useEffect(() => {
-    if (selected) {
+    if (selected && selectedId !== "general") {
       setInstructions(selected.instructions ?? "");
       setGeneralInfo(selected.general_info ?? "");
     }
-  }, [selected?.id]);
+  }, [selected?.id, selectedId]);
 
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: ["contexts", guildId] });
@@ -71,7 +237,7 @@ export function Contexts() {
     }) => guildService.updateContext(guildId!, selected!.id, payload),
     onSuccess: () => {
       invalidate();
-      showToast("Saved.");
+      showToast("Changes saved.");
     },
   });
 
@@ -90,7 +256,7 @@ export function Contexts() {
     mutationFn: (id: string) => guildService.deleteContext(guildId!, id),
     onSuccess: () => {
       invalidate();
-      setSelectedId(null);
+      setSelectedId("general");
     },
   });
 
@@ -111,217 +277,282 @@ export function Contexts() {
   const contextKnowledge = knowledge.filter(
     (k) => k.ai_context_id === selected?.id,
   );
-  const problems = contextKnowledge.filter(
-    (k) => k.section === "problems",
-  );
+  const problems = contextKnowledge.filter((k) => k.section === "problems");
   const knowledgeEntries = contextKnowledge.filter(
     (k) => k.section !== "problems",
   );
 
+  const activeTabMeta = TABS.find((t) => t.id === tab);
+
   if (isLoading) return <PageLoader label="Loading AI contexts…" />;
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 md:gap-6 p-4 md:p-6 max-w-5xl">
-      {/* Context list */}
-      <aside className="w-full md:w-52 flex-shrink-0">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-          AI Contexts
-        </p>
-        <div className="flex md:flex-col gap-2 overflow-x-auto pb-1 md:pb-0 md:space-y-1">
-          {/* General Rules — pinned at top */}
-          <button
-            onClick={() => setSelectedId("general")}
-            className={`w-full rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors ${
-              selectedId === "general"
-                ? "bg-amber-50 text-amber-700 border border-amber-200"
-                : "text-slate-600 hover:bg-slate-50 border border-dashed border-slate-200"
-            }`}
-          >
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span>General Rules</span>
-              <span className="inline-flex items-center rounded-full border border-amber-400 bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-900 shadow-sm">
-                Global — applies to all panels
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-400 mt-0.5">Applies to all panels</p>
-          </button>
-
-          {/* Per-panel contexts */}
-          {contexts.filter(c => c.id !== generalRules?.id).map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedId(c.id)}
-              className={`w-full rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors ${
-                c.id === selected?.id && selectedId !== "general"
-                  ? "bg-sky-50 text-sky-700 border border-sky-200"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              {c.name}
-              <span className="ml-1 text-[10px] text-slate-400">
-                v{c.context_version}
-              </span>
-            </button>
-          ))}
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="space-y-6"
+    >
+      {/* Page header */}
+      <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-indigo-50 p-6 shadow-soft sm:p-8 dark:border-slate-700 dark:bg-none dark:bg-slate-900">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+              <FaBrain className="text-sky-500" />
+              AI Contexts
+            </h1>
+            <p className="mt-1 font-sans text-sm text-slate-600 dark:text-slate-400">
+              Shape how your bot thinks — per panel or server-wide.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-800/80">
+            <FaLayerGroup className="text-slate-400" />
+            <span className="font-sans text-slate-600 dark:text-slate-300">
+              {contexts.filter((c) => c.id !== generalRules?.id).length} panel
+              {contexts.filter((c) => c.id !== generalRules?.id).length === 1
+                ? ""
+                : "s"}
+            </span>
+          </div>
         </div>
-        {creating ? (
-          <div className="mt-3 space-y-2">
-            <input
-              autoFocus
-              className="w-full rounded-xl border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
-              placeholder="Context name"
-              value={newCtxName}
-              onChange={(e) => setNewCtxName(e.target.value)}
-            />
-            <div className="flex gap-1">
-              <button
-                onClick={() =>
-                  newCtxName.trim() && createMut.mutate(newCtxName.trim())
-                }
-                className="flex-1 rounded-lg bg-sky-600 py-1 text-xs text-white hover:bg-sky-700"
-              >
-                Create
-              </button>
-              <button
-                onClick={() => setCreating(false)}
-                className="flex-1 rounded-lg border border-slate-200 py-1 text-xs hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setCreating(true)}
-            className="mt-3 w-full rounded-xl border border-dashed border-slate-300 py-2 text-xs text-slate-500 hover:bg-slate-50"
-          >
-            + New Context
-          </button>
-        )}
-      </aside>
+      </div>
 
-      {/* Editor */}
-      {selectedId === "general" ? (
-        <GeneralRulesEditor
-          guildId={guildId!}
-          generalRules={generalRules}
-          generalLoading={generalLoading}
-          knowledge={knowledge}
-          knowledgeLoading={knowledgeLoading}
-        />
-      ) : selected ? (
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">
-              {selected.name}
-            </h2>
-            <button
-              onClick={() =>
-                window.confirm("Delete this context?") &&
-                deleteMut.mutate(selected.id)
-              }
-              className="text-xs text-red-500 hover:underline"
-            >
-              Delete
-            </button>
-          </div>
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        {/* Sidebar */}
+        <aside className="w-full shrink-0 lg:w-64">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <p className="mb-3 font-display text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+              Contexts
+            </p>
 
-          {/* Tabs */}
-          <div className="flex gap-1 mb-4 border-b border-slate-200 overflow-x-auto">
-            {TABS.map((t) => (
+            <div className="space-y-1.5">
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  tab === t.id
-                    ? "border-sky-600 text-sky-700"
-                    : "border-transparent text-slate-500 hover:text-slate-700"
+                type="button"
+                onClick={() => setSelectedId("general")}
+                className={`group w-full rounded-xl px-3 py-3 text-left transition-all ${
+                  selectedId === "general"
+                    ? "border border-indigo-200 bg-indigo-50/80 ring-1 ring-indigo-200/60 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:ring-indigo-500/20"
+                    : "border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800"
                 }`}
               >
-                {t.label}
+                <div className="flex items-start gap-2.5">
+                  <FaGlobeAmericas
+                    className={`mt-0.5 shrink-0 text-sm ${
+                      selectedId === "general"
+                        ? "text-indigo-500"
+                        : "text-slate-400"
+                    }`}
+                  />
+                  <div className="min-w-0">
+                    <p
+                      className={`truncate font-sans text-sm font-semibold ${
+                        selectedId === "general"
+                          ? "text-indigo-800 dark:text-indigo-200"
+                          : "text-slate-700 dark:text-slate-200"
+                      }`}
+                    >
+                      General Rules
+                    </p>
+                    <div className="mt-1">
+                      <GlobalBadge compact />
+                    </div>
+                  </div>
+                </div>
               </button>
-            ))}
+
+              {contexts
+                .filter((c) => c.id !== generalRules?.id)
+                .map((c) => {
+                  const isActive =
+                    c.id === selected?.id && selectedId !== "general";
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setSelectedId(c.id)}
+                      className={`w-full rounded-xl px-3 py-2.5 text-left transition-all ${
+                        isActive
+                          ? "border border-sky-200 bg-sky-50/80 ring-1 ring-sky-200/60 dark:border-sky-500/30 dark:bg-sky-500/10 dark:ring-sky-500/20"
+                          : "border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <p
+                        className={`truncate font-sans text-sm font-medium ${
+                          isActive
+                            ? "text-sky-800 dark:text-sky-200"
+                            : "text-slate-700 dark:text-slate-200"
+                        }`}
+                      >
+                        {c.name}
+                      </p>
+                      <p className="mt-0.5 font-mono text-[10px] text-slate-400">
+                        v{c.context_version}
+                      </p>
+                    </button>
+                  );
+                })}
+            </div>
+
+            {creating ? (
+              <div className="mt-4 space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+                <input
+                  autoFocus
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-sans text-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/20 dark:border-slate-600 dark:bg-slate-800"
+                  placeholder="Context name"
+                  value={newCtxName}
+                  onChange={(e) => setNewCtxName(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      newCtxName.trim() && createMut.mutate(newCtxName.trim())
+                    }
+                    disabled={!newCtxName.trim() || createMut.isPending}
+                    className="flex-1 rounded-xl bg-sky-600 py-2 font-sans text-xs font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
+                  >
+                    Create
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCreating(false)}
+                    className="flex-1 rounded-xl border border-slate-200 py-2 font-sans text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setCreating(true)}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 py-2.5 font-sans text-xs font-medium text-slate-500 transition hover:border-sky-300 hover:bg-sky-50/50 hover:text-sky-600 dark:border-slate-600 dark:hover:border-sky-500/40 dark:hover:bg-sky-500/5 dark:hover:text-sky-400"
+              >
+                <FaPlus className="text-[10px]" />
+                New Context
+              </button>
+            )}
           </div>
+        </aside>
 
-          {tab === "instructions" && (
-            <div className="space-y-3">
-              <p className="text-xs text-slate-500">
-                Always injected into every prompt for this context.
-              </p>
-              <textarea
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 min-h-[200px]"
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                placeholder="e.g. Always reply in a friendly tone. Never mention competitor products."
-              />
-              <button
-                onClick={handleSaveText}
-                className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
-              >
-                Save
-              </button>
-            </div>
-          )}
-
-          {tab === "general_info" && (
-            <div className="space-y-3">
-              <p className="text-xs text-slate-500">
-                General information always available to the AI (no retrieval
-                needed).
-              </p>
-              <textarea
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 min-h-[200px]"
-                value={generalInfo}
-                onChange={(e) => setGeneralInfo(e.target.value)}
-                placeholder="e.g. Our store is open Mon–Fri 9am–6pm. Support email: help@example.com"
-              />
-              <button
-                onClick={handleSaveText}
-                className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
-              >
-                Save
-              </button>
-            </div>
-          )}
-
-          {tab === "problems" &&
-            (knowledgeLoading ? (
-              <SkeletonList count={2} />
-            ) : (
-              <KnowledgeList
-                entries={problems}
-                label="Problem → Solution entries"
+        {/* Main panel */}
+        <main className="min-w-0 flex-1">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 dark:border-slate-700 dark:bg-slate-900">
+            {selectedId === "general" ? (
+              <GeneralRulesEditor
                 guildId={guildId!}
-                contextId={selected.id}
-                section="problems"
+                generalRules={generalRules}
+                generalLoading={generalLoading}
+                knowledge={knowledge}
+                knowledgeLoading={knowledgeLoading}
               />
-            ))}
+            ) : selected ? (
+              <>
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                      {selected.name}
+                    </h2>
+                    <p className="mt-1 font-sans text-sm text-slate-500 dark:text-slate-400">
+                      Panel-specific AI context
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      window.confirm("Delete this context?") &&
+                      deleteMut.mutate(selected.id)
+                    }
+                    className="inline-flex items-center gap-1.5 self-start rounded-xl border border-red-200 px-3 py-1.5 font-sans text-xs font-medium text-red-600 transition hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+                  >
+                    <FaTrash className="text-[10px]" />
+                    Delete
+                  </button>
+                </div>
 
-          {tab === "knowledge" &&
-            (knowledgeLoading ? (
-              <SkeletonList count={2} />
+                <div className="mb-5">
+                  <TabBar active={tab} onChange={setTab} />
+                </div>
+
+                <p className="mb-4 font-sans text-sm text-slate-500 dark:text-slate-400">
+                  {activeTabMeta?.hint}
+                </p>
+
+                {(tab === "instructions" || tab === "general_info") && (
+                  <div className="space-y-4">
+                    <EditorArea
+                      value={tab === "instructions" ? instructions : generalInfo}
+                      onChange={
+                        tab === "instructions"
+                          ? setInstructions
+                          : setGeneralInfo
+                      }
+                      placeholder={
+                        tab === "instructions"
+                          ? "e.g. Always reply in a friendly tone. Never mention competitor products."
+                          : "e.g. Our store is open Mon–Fri 9am–6pm. Support email: help@example.com"
+                      }
+                    />
+                    <PrimaryButton
+                      onClick={handleSaveText}
+                      loading={updateMut.isPending}
+                    >
+                      {updateMut.isPending ? "Saving…" : "Save changes"}
+                    </PrimaryButton>
+                  </div>
+                )}
+
+                {tab === "problems" &&
+                  (knowledgeLoading ? (
+                    <SkeletonList count={2} />
+                  ) : (
+                    <KnowledgeTable
+                      entries={problems}
+                      label="Problem → Solution entries"
+                      guildId={guildId!}
+                      contextId={selected.id}
+                      section="problems"
+                    />
+                  ))}
+
+                {tab === "knowledge" &&
+                  (knowledgeLoading ? (
+                    <SkeletonList count={2} />
+                  ) : (
+                    <KnowledgeTable
+                      entries={knowledgeEntries}
+                      label="General knowledge entries"
+                      guildId={guildId!}
+                      contextId={selected.id}
+                      section="knowledge"
+                    />
+                  ))}
+              </>
             ) : (
-              <KnowledgeList
-                entries={knowledgeEntries}
-                label="General knowledge entries"
-                guildId={guildId!}
-                contextId={selected.id}
-                section="knowledge"
-              />
-            ))}
-        </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
-          Select or create a context.
-        </div>
-      )}
+              <div className="flex min-h-[240px] flex-col items-center justify-center text-center">
+                <FaBrain className="mb-3 text-3xl text-slate-300 dark:text-slate-600" />
+                <p className="font-sans text-sm text-slate-500 dark:text-slate-400">
+                  Select or create a context to get started.
+                </p>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
 
-      {toast && (
-        <div className="fixed bottom-6 right-6 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">
-          {toast}
-        </div>
-      )}
-    </div>
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            className="fixed bottom-6 right-6 z-50 rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 font-sans text-sm font-medium text-white shadow-lg"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -339,11 +570,15 @@ function GeneralRulesEditor({
   knowledgeLoading: boolean;
 }) {
   const qc = useQueryClient();
-  const [grInstructions, setGrInstructions] = useState(generalRules?.instructions ?? "");
-  const [grGeneralInfo, setGrGeneralInfo] = useState(generalRules?.general_info ?? "");
+  const [grInstructions, setGrInstructions] = useState(
+    generalRules?.instructions ?? "",
+  );
+  const [grGeneralInfo, setGrGeneralInfo] = useState(
+    generalRules?.general_info ?? "",
+  );
   const [grEnabled, setGrEnabled] = useState(generalRules?.enabled ?? true);
   const [grTab, setGrTab] = useState<Tab>("instructions");
-  const [toast, setToast] = useState<string | null>(null);
+  const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => {
     if (generalRules) {
@@ -354,26 +589,41 @@ function GeneralRulesEditor({
   }, [generalRules?.id, generalRules?.context_version]);
 
   const updateMut = useMutation({
-    mutationFn: (payload: { instructions?: string; general_info?: string; enabled?: boolean }) =>
-      guildService.updateGeneralRules(guildId, payload),
+    mutationFn: (payload: {
+      instructions?: string;
+      general_info?: string;
+      enabled?: boolean;
+    }) => guildService.updateGeneralRules(guildId, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["general-rules", guildId] });
-      setToast("Saved.");
-      setTimeout(() => setToast(null), 2500);
+      setSavedFlash(true);
+      setTimeout(() => setSavedFlash(false), 2500);
     },
   });
 
   function handleSave() {
-    updateMut.mutate({ instructions: grInstructions, general_info: grGeneralInfo, enabled: grEnabled });
+    updateMut.mutate({
+      instructions: grInstructions,
+      general_info: grGeneralInfo,
+      enabled: grEnabled,
+    });
   }
 
-  const generalKnowledge = knowledge.filter((k) => k.ai_context_id === generalRules?.id);
-  const generalProblems = generalKnowledge.filter((k) => k.section === "problems");
-  const generalKnowledgeEntries = generalKnowledge.filter((k) => k.section !== "problems");
+  const generalKnowledge = knowledge.filter(
+    (k) => k.ai_context_id === generalRules?.id,
+  );
+  const generalProblems = generalKnowledge.filter(
+    (k) => k.section === "problems",
+  );
+  const generalKnowledgeEntries = generalKnowledge.filter(
+    (k) => k.section !== "problems",
+  );
+
+  const activeTabMeta = TABS.find((t) => t.id === grTab);
 
   if (generalLoading && !generalRules) {
     return (
-      <div className="flex-1 min-w-0">
+      <div className="space-y-4">
         <SkeletonLine w="w-48" h="h-8" />
         <SkeletonList count={3} />
       </div>
@@ -381,85 +631,93 @@ function GeneralRulesEditor({
   }
 
   return (
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center justify-between mb-4">
+    <div>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold text-slate-900">General Rules</h2>
-            <span className="inline-flex items-center rounded-full border border-amber-400 bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-900 shadow-sm">
-              Global — applies to all panels
-            </span>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+              General Rules
+            </h2>
+            <GlobalBadge />
           </div>
-          <p className="text-xs text-slate-500 mt-1">Applies to ALL AI-enabled panels on this server.</p>
+          <p className="mt-1.5 font-sans text-sm text-slate-500 dark:text-slate-400">
+            Applies to all AI-enabled panels on this server.
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-sm">
-            <span className={grEnabled ? "text-emerald-700 font-medium" : "text-slate-400"}>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2.5">
+            <span
+              className={`font-sans text-sm font-medium ${
+                grEnabled
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-slate-400"
+              }`}
+            >
               {grEnabled ? "Active" : "Disabled"}
             </span>
-            <button type="button" onClick={() => setGrEnabled(!grEnabled)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${grEnabled ? 'bg-emerald-600' : 'bg-slate-200'}`}>
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${grEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-            </button>
+            <ToggleSwitch enabled={grEnabled} onChange={setGrEnabled} />
           </label>
-          <button onClick={handleSave} disabled={updateMut.isPending}
-            className="rounded-xl bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50">
+          <PrimaryButton
+            onClick={handleSave}
+            loading={updateMut.isPending}
+            variant="indigo"
+          >
             {updateMut.isPending ? "Saving…" : "Save"}
-          </button>
+          </PrimaryButton>
         </div>
       </div>
 
       {!grEnabled && (
-        <div className="rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-4 mb-4 shadow-sm" role="alert">
-          <p className="text-sm font-semibold text-amber-900">General Rules is currently OFF</p>
-          <p className="text-xs text-amber-800 mt-1">
-            Server-wide rules are not being applied to any panel. Turn on the toggle above to inject General Rules into every AI reply.
+        <div
+          className="mb-5 rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3.5 dark:border-amber-500/30 dark:bg-amber-500/10"
+          role="alert"
+        >
+          <p className="font-sans text-sm font-semibold text-amber-900 dark:text-amber-300">
+            General Rules is currently off
+          </p>
+          <p className="mt-1 font-sans text-xs text-amber-800/80 dark:text-amber-400/80">
+            Server-wide rules are not being applied. Turn on the toggle above to
+            inject them into every AI reply.
           </p>
         </div>
       )}
 
-      <div className="flex gap-1 mb-4 border-b border-slate-200 overflow-x-auto">
-        {TABS.map((t) => (
-          <button key={t.id} onClick={() => setGrTab(t.id)}
-            className={`whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-              grTab === t.id ? "border-amber-600 text-amber-700" : "border-transparent text-slate-500 hover:text-slate-700"
-            }`}>{t.label}</button>
-        ))}
+      <div className="mb-5">
+        <TabBar active={grTab} onChange={setGrTab} accent="indigo" />
       </div>
 
-      {grTab === "instructions" && (
-        <div className="space-y-3">
-          <p className="text-xs text-slate-500">
-            Rules that apply to every AI reply on this server — tone, safety, escalation rules.
-          </p>
-          <textarea
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 min-h-[240px] font-mono"
-            value={grInstructions}
-            onChange={(e) => setGrInstructions(e.target.value)}
-            placeholder={"# General Rules\n\n## Tone & Style\n- Be friendly, professional, concise\n- Always reply in the user's language\n\n## Safety\n- Never promise refunds without approval\n- Never share internal info\n\n## Escalation\n- If user is angry, offer human help"}
-          />
-          <button onClick={handleSave} disabled={updateMut.isPending}
-            className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50">
-            {updateMut.isPending ? "Saving…" : "Save General Rules"}
-          </button>
-        </div>
-      )}
+      <p className="mb-4 font-sans text-sm text-slate-500 dark:text-slate-400">
+        {grTab === "instructions" ? GLOBAL_TAB_HINT : activeTabMeta?.hint}
+      </p>
 
-      {grTab === "general_info" && (
-        <div className="space-y-3">
-          <p className="text-xs text-slate-500">
-            General server/company info available to the AI across all panels.
-          </p>
-          <textarea
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 min-h-[240px]"
-            value={grGeneralInfo}
-            onChange={(e) => setGrGeneralInfo(e.target.value)}
-            placeholder={"Company: Your Company Name\nSupport hours: Mon-Fri 9am-6pm UTC\nWebsite: https://example.com\nContact: support@example.com\n\n## Common Situations\n- Order status: ask for order number\n- Refunds: never promise — escalate to staff"}
+      {(grTab === "instructions" || grTab === "general_info") && (
+        <div className="space-y-4">
+          <EditorArea
+            value={grTab === "instructions" ? grInstructions : grGeneralInfo}
+            onChange={
+              grTab === "instructions" ? setGrInstructions : setGrGeneralInfo
+            }
+            placeholder={
+              grTab === "instructions"
+                ? "# General Rules\n\n## Tone & Style\n- Be friendly, professional, concise\n\n## Safety\n- Never promise refunds without approval"
+                : "Company: Your Company Name\nSupport hours: Mon–Fri 9am–6pm UTC\nWebsite: https://example.com"
+            }
+            minHeight="min-h-[320px]"
           />
-          <button onClick={handleSave} disabled={updateMut.isPending}
-            className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50">
-            {updateMut.isPending ? "Saving…" : "Save General Rules"}
-          </button>
+          <div className="flex items-center gap-3">
+            <PrimaryButton
+              onClick={handleSave}
+              loading={updateMut.isPending}
+              variant="indigo"
+            >
+              {updateMut.isPending ? "Saving…" : "Save General Rules"}
+            </PrimaryButton>
+            {savedFlash && (
+              <span className="font-sans text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                Saved successfully
+              </span>
+            )}
+          </div>
         </div>
       )}
 
@@ -467,7 +725,7 @@ function GeneralRulesEditor({
         knowledgeLoading ? (
           <SkeletonList count={2} />
         ) : (
-          <KnowledgeList
+          <KnowledgeTable
             entries={generalProblems}
             label="Common problems & solutions (server-wide)"
             guildId={guildId}
@@ -481,7 +739,7 @@ function GeneralRulesEditor({
         knowledgeLoading ? (
           <SkeletonList count={2} />
         ) : (
-          <KnowledgeList
+          <KnowledgeTable
             entries={generalKnowledgeEntries}
             label="General knowledge entries (server-wide)"
             guildId={guildId}
@@ -490,15 +748,11 @@ function GeneralRulesEditor({
           />
         )
       )}
-
-      {toast && (
-        <span className="ml-3 text-sm text-emerald-600">{toast}</span>
-      )}
     </div>
   );
 }
 
-function KnowledgeList({
+function KnowledgeTable({
   entries,
   label,
   guildId,
@@ -542,28 +796,32 @@ function KnowledgeList({
   });
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-slate-500">{label}</p>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-sans text-sm font-medium text-slate-600 dark:text-slate-300">
+          {label}
+        </p>
         <button
+          type="button"
           onClick={() => setAdding(true)}
-          className="rounded-lg bg-sky-600 px-3 py-1 text-xs text-white hover:bg-sky-700"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-3.5 py-2 font-sans text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700"
         >
-          + Add
+          <FaPlus className="text-[10px]" />
+          Add entry
         </button>
       </div>
 
       {adding && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 space-y-3 dark:border-slate-700 dark:bg-slate-800/40">
           <input
             autoFocus
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 font-sans text-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/20 dark:border-slate-600 dark:bg-slate-800"
             placeholder="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
           <textarea
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 min-h-[100px]"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 font-mono text-[13px] leading-relaxed focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/20 dark:border-slate-600 dark:bg-slate-800 min-h-[120px]"
             placeholder={
               section === "problems"
                 ? "Problem description and solution…"
@@ -574,26 +832,23 @@ function KnowledgeList({
           />
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => createMut.mutate()}
-              disabled={!title.trim() || !content.trim() || createMut.isPending}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs text-white hover:bg-sky-700 disabled:opacity-50"
+              disabled={
+                !title.trim() || !content.trim() || createMut.isPending
+              }
+              className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 font-sans text-xs font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
             >
-              {createMut.isPending ? (
-                <>
-                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Saving…
-                </>
-              ) : (
-                "Save"
-              )}
+              {createMut.isPending ? "Saving…" : "Save entry"}
             </button>
             <button
+              type="button"
               onClick={() => {
                 setAdding(false);
                 setTitle("");
                 setContent("");
               }}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-100"
+              className="rounded-xl border border-slate-200 px-4 py-2 font-sans text-xs font-medium text-slate-600 hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               Cancel
             </button>
@@ -601,30 +856,68 @@ function KnowledgeList({
         </div>
       )}
 
-      {entries.length === 0 && !adding && (
-        <p className="text-sm text-slate-400">No entries yet.</p>
-      )}
-      {entries.map((k) => (
-        <div
-          key={k.id}
-          className="flex items-start justify-between rounded-xl border border-slate-200 bg-white px-4 py-3"
-        >
-          <div className="min-w-0">
-            <p className="font-medium text-sm text-slate-900 truncate">
-              {k.title}
-            </p>
-            <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
-              {k.main_content ?? k.content}
-            </p>
-          </div>
+      {entries.length === 0 && !adding ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 py-12 text-center dark:border-slate-700">
+          <p className="font-sans text-sm text-slate-400">No entries yet.</p>
           <button
-            onClick={() => deleteMut.mutate(k.id)}
-            className="ml-4 flex-shrink-0 text-xs text-red-500 hover:underline"
+            type="button"
+            onClick={() => setAdding(true)}
+            className="mt-2 font-sans text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
           >
-            Delete
+            Add your first entry
           </button>
         </div>
-      ))}
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] border-collapse font-sans text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/90 dark:border-slate-700 dark:bg-slate-800/80">
+                  <th className="px-5 py-3.5 text-left font-display text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                    Title
+                  </th>
+                  <th className="px-5 py-3.5 text-left font-display text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                    Preview
+                  </th>
+                  <th className="w-24 px-5 py-3.5 text-right font-display text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {entries.map((k) => (
+                  <tr
+                    key={k.id}
+                    className="bg-white transition-colors hover:bg-slate-50/80 dark:bg-slate-900 dark:hover:bg-slate-800/50"
+                  >
+                    <td className="px-5 py-4 align-top">
+                      <p className="font-sans font-semibold text-slate-900 dark:text-slate-100">
+                        {k.title}
+                      </p>
+                    </td>
+                    <td className="px-5 py-4 align-top">
+                      <p className="line-clamp-2 font-mono text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+                        {k.main_content ?? k.content}
+                      </p>
+                    </td>
+                    <td className="px-5 py-4 align-top text-right">
+                      <button
+                        type="button"
+                        onClick={() => deleteMut.mutate(k.id)}
+                        disabled={deleteMut.isPending}
+                        className="inline-flex items-center gap-1 rounded-lg px-2 py-1 font-sans text-xs font-medium text-red-500 transition hover:bg-red-50 dark:hover:bg-red-500/10"
+                      >
+                        <FaTrash className="text-[10px]" />
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
