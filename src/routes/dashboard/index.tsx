@@ -17,8 +17,6 @@ async function fetchGuilds(): Promise<Guild[]> {
   return res.data;
 }
 
-const BOT_INVITE_BASE_URL = DISCORD_BOT_INVITE_URL;
-
 export const Dashboard = () => {
   const params = useParams<{ guildId?: string }>();
   const alert = useAlert();
@@ -31,9 +29,7 @@ export const Dashboard = () => {
   useEffect(() => {
     if (!isError || hasShownGuildError.current) return;
     hasShownGuildError.current = true;
-    alert.error(
-      'Failed to load servers. Log out, sign in again with Discord, then refresh. If the problem persists, the API may be unreachable.',
-    );
+    alert.error('Failed to load servers. Please refresh the page.');
   }, [alert, isError]);
 
   const selectedGuild =
@@ -64,7 +60,7 @@ export const Dashboard = () => {
   }, [guilds, query, filter]);
 
   const handleAddBot = (guildId: string | number) => {
-    const url = `${BOT_INVITE_BASE_URL}&guild_id=${String(
+    const url = `${DISCORD_BOT_INVITE_URL}&guild_id=${String(
       guildId,
     )}&disable_guild_select=true`;
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -106,7 +102,7 @@ export const Dashboard = () => {
       {isError && !isLoading && (
         <p className="text-sm text-red-600 flex items-center gap-2">
           <FaServer className="text-red-400" />
-          Failed to load servers. Log out, sign in again with Discord, then refresh.
+          Failed to load servers. Please refresh the page.
         </p>
       )}
 

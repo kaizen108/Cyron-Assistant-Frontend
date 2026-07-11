@@ -5,7 +5,7 @@ const AppContext = createContext<AppContextValue | undefined>(undefined);
 const LS_THEME_KEY = 'theme';
 const LS_SELECTED_PLAN_KEY = 'selected_plan';
 
-const DEFAULT_PRICING_PLANS: readonly PricingPlan[] = [ 
+const DEFAULT_PRICING_PLANS: readonly PricingPlan[] = [
   {
     id: 'free',
     name: 'Free',
@@ -33,7 +33,7 @@ const DEFAULT_PRICING_PLANS: readonly PricingPlan[] = [
       'Customizable ticket embeds & branding',
       'Fine‑grained concurrency & rate limits',
       'Usage analytics with export‑ready charts',
-      'Email support with 24h-48h response',
+      'Email support with 24-48h response',
     ],
     variant: 'primary',
     ctaLabel: 'Start Pro trial',

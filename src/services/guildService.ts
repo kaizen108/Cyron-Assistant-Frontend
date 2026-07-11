@@ -72,6 +72,8 @@ export const guildService = {
       template_payload?: Record<string, unknown> | null;
       source?: string | null;
       persist_mode?: "pipeline" | "structured";
+      ai_context_id?: string;
+      section?: string;
     },
   ) {
     return api.post(`/guilds/${guildId}/knowledge`, payload);
@@ -128,18 +130,12 @@ export const guildService = {
   },
 
   async sendPanelToChannel(guildId: string, panelId: string, channelId: string): Promise<void> {
-    await api.post(`/guilds/${guildId}/panels/${panelId}/send`, { channel_id: channelId });
+    await api.post(`/guilds/${guildId}/panels/${panelId}/send`, { channel_id: parseInt(channelId) });
   },
 
   // Panels
   async fetchPanels(guildId: string) {
     const res = await api.get<Panel[]>(`/guilds/${guildId}/panels`);
-    return res.data;
-  },
-  async fetchAiEnabledPanels(guildId: string) {
-    const res = await api.get<Pick<Panel, "id" | "name" | "ai_context_id">[]>(
-      `/guilds/${guildId}/panels/ai-enabled`,
-    );
     return res.data;
   },
   async createPanel(guildId: string, payload: Omit<Panel, "id" | "guild_id">) {
@@ -179,12 +175,7 @@ export const guildService = {
   async updateContext(
     guildId: string,
     contextId: string,
-    payload: {
-      name: string;
-      instructions?: string;
-      general_info?: string;
-      linked_panel_ids?: string[];
-    },
+    payload: { name: string; instructions?: string; general_info?: string },
   ) {
     const res = await api.put<AIContext>(
       `/guilds/${guildId}/contexts/${contextId}`,
@@ -194,5 +185,18 @@ export const guildService = {
   },
   async deleteContext(guildId: string, contextId: string) {
     return api.delete(`/guilds/${guildId}/contexts/${contextId}`);
+  },
+
+  // General Rules (global AI context)
+  async fetchGeneralRules(guildId: string): Promise<GeneralRules> {
+    const res = await api.get<GeneralRules>(`/guilds/${guildId}/contexts/general`);
+    return res.data;
+  },
+  async updateGeneralRules(
+    guildId: string,
+    payload: { instructions?: string; general_info?: string; enabled?: boolean },
+  ): Promise<GeneralRules> {
+    const res = await api.put<GeneralRules>(`/guilds/${guildId}/contexts/general`, payload);
+    return res.data;
   },
 };

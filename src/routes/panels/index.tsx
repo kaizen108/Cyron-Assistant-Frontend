@@ -12,8 +12,7 @@ const DEFAULT_SCHEDULE = Object.fromEntries(
 const EMPTY: Omit<Panel, 'id' | 'guild_id'> = {
   name: '', bot_id: null, ticket_category_name: 'Tickets',
   button_text: 'Open Ticket', button_emoji: null, welcome_message: null, ai_context_id: null,
-  ai_auto_reply: false,
-  is_enabled: true, support_role_ids: null, overflow_category_ids: null,
+  is_enabled: true, ai_auto_reply: false, support_role_ids: null, overflow_category_ids: null,
   threading_mode: false, save_transcripts: true,
   channel_name_format: '{panel.name}-{ticket.number}',
   roles_required: null, roles_blocked: null, limit_bypass_roles: null,
@@ -38,9 +37,10 @@ const EMPTY: Omit<Panel, 'id' | 'guild_id'> = {
   published_channel_id: null, published_message_id: null,
 };
 
-type Tab = 'general' | 'embed' | 'messages' | 'forms' | 'availability' | 'logging';
+type Tab = 'general' | 'ai' | 'embed' | 'messages' | 'forms' | 'availability' | 'logging';
 const TABS: { id: Tab; label: string }[] = [
   { id: 'general', label: 'General' },
+  { id: 'ai', label: 'AI' },
   { id: 'embed', label: 'Embed' },
   { id: 'messages', label: 'Messages' },
   { id: 'forms', label: 'Forms' },
@@ -96,6 +96,8 @@ export function Panels() {
   const [tab, setTab] = useState<Tab>('general');
   const [sendingPanel, setSendingPanel] = useState<Panel | null>(null);
   const [selectedChannel, setSelectedChannel] = useState('');
+  const [createContextOpen, setCreateContextOpen] = useState(false);
+  const [newContextName, setNewContextName] = useState('');
 
   const set = (key: keyof typeof EMPTY, value: any) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -111,6 +113,14 @@ export function Panels() {
     enabled: !!guildId,
   });
 
+  const { data: generalRules } = useQuery({
+    queryKey: ['general-rules', guildId],
+    queryFn: () => guildService.fetchGeneralRules(guildId!),
+    enabled: !!guildId,
+  });
+
+  const panelContexts = contexts.filter((c) => c.id !== generalRules?.id);
+
   const { data: channels = [] } = useQuery({
     queryKey: ['channels', guildId],
     queryFn: () => guildService.fetchChannels(guildId!),
@@ -121,6 +131,15 @@ export function Panels() {
   const createMut = useMutation({ mutationFn: (p: typeof EMPTY) => guildService.createPanel(guildId!, p), onSuccess: invalidate });
   const updateMut = useMutation({ mutationFn: (p: Panel) => guildService.updatePanel(guildId!, p.id, p), onSuccess: invalidate });
   const deleteMut = useMutation({ mutationFn: (id: string) => guildService.deletePanel(guildId!, id), onSuccess: invalidate });
+  const createContextMut = useMutation({
+    mutationFn: (name: string) => guildService.createContext(guildId!, { name }),
+    onSuccess: (ctx) => {
+      qc.invalidateQueries({ queryKey: ['contexts', guildId] });
+      set('ai_context_id', ctx.id);
+      setCreateContextOpen(false);
+      setNewContextName('');
+    },
+  });
 
   function openCreate() { setEditing(null); setForm(EMPTY); setTab('general'); setOpen(true); }
   function openEdit(p: Panel) { setEditing(p); setForm(p as any); setTab('general'); setOpen(true); }
@@ -145,7 +164,7 @@ export function Panels() {
 
       <div className="space-y-3">
         {panels.map((p) => {
-          const ctx = contexts.find((c) => c.id === p.ai_context_id);
+          const ctx = panelContexts.find((c) => c.id === p.ai_context_id);
           return (
             <div key={p.id} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
               <div>
@@ -201,10 +220,6 @@ export function Panels() {
                   <Input value={form.channel_name_format} onChange={(v) => set('channel_name_format', v)} />
                   <p className="mt-1 text-[11px] text-slate-400">Variables: {'{panel.name}'}, {'{ticket.creator.username}'}, {'{ticket.number}'}</p>
                 </Field>
-                <Field label="Linked AI Context">
-                  <Select value={form.ai_context_id ?? ''} onChange={(v) => set('ai_context_id', v || null)}
-                    options={[{ value: '', label: '— None —' }, ...contexts.map((c) => ({ value: c.id, label: c.name }))]} />
-                </Field>
                 <div className="grid grid-cols-2 gap-4">
                   <Field label="Max tickets per user">
                     <Input type="number" value={String(form.max_open_tickets_per_user)} onChange={(v) => set('max_open_tickets_per_user', parseInt(v) || 1)} />
@@ -223,11 +238,58 @@ export function Panels() {
                 </Field>
                 <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 px-3">
                   <Toggle label="Panel Enabled" checked={form.is_enabled} onChange={(v) => set('is_enabled', v)} />
-                  <Toggle label="AI Auto-Reply" checked={form.ai_auto_reply} onChange={(v) => set('ai_auto_reply', v)} hint="When enabled, the bot replies in tickets using the linked AI context" />
                   <Toggle label="Claiming Enabled" checked={form.claiming_enabled} onChange={(v) => set('claiming_enabled', v)} />
                   <Toggle label="Users Can Close" checked={form.users_can_close} onChange={(v) => set('users_can_close', v)} hint="Allow ticket creator to close their own ticket" />
                   <Toggle label="Save Transcripts" checked={form.save_transcripts} onChange={(v) => set('save_transcripts', v)} />
                 </div>
+              </>}
+
+              {tab === 'ai' && <>
+                <p className="text-xs text-slate-500 mb-2">Configure AI auto-reply behavior for tickets opened from this panel.</p>
+                <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 px-3">
+                  <Toggle label="AI Auto-Reply" checked={form.ai_auto_reply} onChange={(v) => set('ai_auto_reply', v)} hint="When enabled, the AI will automatically respond to user messages in tickets" />
+                </div>
+                {form.ai_auto_reply ? (
+                  <div className="space-y-3 mt-3">
+                    <Field label="AI Context">
+                      <div className="flex gap-2">
+                        <select
+                          value={form.ai_context_id || ''}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '__create__') {
+                              setCreateContextOpen(true);
+                              return;
+                            }
+                            set('ai_context_id', value || null);
+                          }}
+                          className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        >
+                          <option value="">— Select AI Context —</option>
+                          {panelContexts.map((c) => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                          <option value="__create__">+ Create new context</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => setCreateContextOpen(true)}
+                          className="shrink-0 rounded-xl border border-dashed border-sky-300 px-3 py-2 text-xs font-medium text-sky-700 hover:bg-sky-50"
+                        >
+                          + Create new context
+                        </button>
+                      </div>
+                    </Field>
+                    <p className="text-xs text-slate-400">
+                      The AI Context provides instructions and knowledge the bot uses to answer questions.
+                      {!form.ai_context_id && " If none is selected, General Rules alone will be used (when enabled)."}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    AI is disabled for this panel — tickets work as normal, staff only.
+                  </p>
+                )}
               </>}
 
               {tab === 'embed' && <>
@@ -388,6 +450,45 @@ export function Panels() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Create AI Context modal */}
+      {createContextOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-900">New AI Context</h3>
+              <button type="button" onClick={() => { setCreateContextOpen(false); setNewContextName(''); }}
+                className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+            </div>
+            <p className="text-xs text-slate-500">Create a panel-specific context. It will be linked to this panel automatically.</p>
+            <input
+              autoFocus
+              value={newContextName}
+              onChange={(e) => setNewContextName(e.target.value)}
+              placeholder="e.g. Sales Support"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newContextName.trim()) {
+                  e.preventDefault();
+                  createContextMut.mutate(newContextName.trim());
+                }
+              }}
+            />
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => { setCreateContextOpen(false); setNewContextName(''); }}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50">Cancel</button>
+              <button
+                type="button"
+                disabled={!newContextName.trim() || createContextMut.isPending}
+                onClick={() => createContextMut.mutate(newContextName.trim())}
+                className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50"
+              >
+                {createContextMut.isPending ? 'Creating…' : 'Create & Link'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

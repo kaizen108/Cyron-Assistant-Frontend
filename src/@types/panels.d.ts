@@ -8,9 +8,9 @@ interface Panel {
   button_emoji: string | null;
   welcome_message: string | null;
   ai_context_id: string | null;
-  ai_auto_reply: boolean;
   // General
   is_enabled: boolean;
+  ai_auto_reply: boolean;
   support_role_ids: number[] | null;
   overflow_category_ids: number[] | null;
   threading_mode: boolean;
@@ -88,4 +88,13 @@ interface AIContext {
   context_version: number;
   instructions: string | null;
   general_info: string | null;
+}
+
+interface GeneralRules {
+  id: string;
+  name: string;
+  context_version: number;
+  instructions: string | null;
+  general_info: string | null;
+  enabled: boolean;
 }

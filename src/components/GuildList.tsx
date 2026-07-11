@@ -10,8 +10,6 @@ async function fetchGuilds(): Promise<Guild[]> {
   return res.data;
 }
 
-const BOT_INVITE_BASE_URL = DISCORD_BOT_INVITE_URL;
-
 export const GuildList = () => {
   const { data: guilds, isLoading, isError } = useQuery({
     queryKey: ['guilds'],
@@ -48,7 +46,7 @@ export const GuildList = () => {
             const handleAddBot = (e: MouseEvent) => {
               e.preventDefault();
               e.stopPropagation();
-              const url = `${BOT_INVITE_BASE_URL}&guild_id=${guild.id}&disable_guild_select=true`;
+              const url = `${DISCORD_BOT_INVITE_URL}&guild_id=${guild.id}&disable_guild_select=true`;
               window.open(url, '_blank', 'noopener,noreferrer');
             };
 

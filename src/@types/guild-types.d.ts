@@ -29,6 +29,11 @@ interface KnowledgeEntry {
   main_content?: string | null;
   additional_context?: string | null;
   behavior_notes?: string | null;
+  template_type?: string | null;
+  template_payload?: Record<string, unknown> | null;
+  source?: string | null;
+  ai_context_id?: string | null;
+  section?: string | null;
   created_at: string;
 }
 

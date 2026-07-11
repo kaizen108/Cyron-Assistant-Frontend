@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAlert } from 'react-alert';
 import { useAuth } from '../hooks/useAuth';
-import { API_BASE_URL, FRONTEND_BASE_URL } from '../lib/config';
+import { api } from '../lib/api';
 
 export const AuthCallback = () => {
   const location = useLocation();
@@ -22,48 +22,38 @@ export const AuthCallback = () => {
     if (ranOnce.current) return;
     ranOnce.current = true;
 
-    const fail = (msg: string) => {
-      setError(msg);
-      alert.error(msg);
-    };
-
-    // Flow A: backend redirected here with ?token=...
-    if (token) {
-      setAuthToken(token);
-      navigate('/', { replace: true });
-      return;
-    }
-
-    // Flow B: Discord redirected here with ?code=...&state=...
-    if (code && state) {
-      const url = new URL('/auth/callback', API_BASE_URL);
-      url.searchParams.set('code', code);
-      url.searchParams.set('state', state);
-
-      void (async () => {
-        try {
-          const res = await fetch(url.toString(), { method: 'POST' });
-          if (!res.ok) {
-            throw new Error(`Auth exchange failed (${res.status})`);
-          }
-          const data = (await res.json()) as { token?: string; redirect?: string };
-          if (!data.token) {
-            throw new Error('Missing token in auth response');
-          }
-          setAuthToken(data.token);
-          const redirectTarget =
-            data.redirect?.startsWith(FRONTEND_BASE_URL)
-              ? new URL(data.redirect).pathname
-              : '/';
-          navigate(redirectTarget || '/', { replace: true });
-        } catch {
-          fail('Something went wrong during authentication. Please try again.');
+    async function finishAuth() {
+      try {
+        // Flow A: backend already redirected here with ?token=...
+        if (token) {
+          setAuthToken(token);
+          navigate('/dashboard', { replace: true });
+          return;
         }
-      })();
-      return;
+
+        // Flow B: Discord redirected here with ?code=...&state=...
+        if (code && state) {
+          const res = await api.post<{ token: string; redirect?: string }>(
+            '/auth/callback',
+            null,
+            { params: { code, state } },
+          );
+          setAuthToken(res.data.token);
+          navigate(res.data.redirect ?? '/dashboard', { replace: true });
+          return;
+        }
+
+        const msg = 'Missing OAuth parameters. Please try signing in again.';
+        setError(msg);
+        alert.error(msg);
+      } catch {
+        const msg = 'Something went wrong during authentication. Please try again.';
+        setError(msg);
+        alert.error(msg);
+      }
     }
 
-    fail('Missing OAuth parameters. Please try signing in again.');
+    void finishAuth();
   }, [alert, code, navigate, setAuthToken, state, token]);
 
   return (
