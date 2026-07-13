@@ -12,7 +12,7 @@ const DEFAULT_SCHEDULE = Object.fromEntries(
 const EMPTY: Omit<Panel, 'id' | 'guild_id'> = {
   name: '', bot_id: null, ticket_category_name: 'Tickets',
   button_text: 'Open Ticket', button_emoji: null, welcome_message: null, ai_context_id: null,
-  is_enabled: true, ai_auto_reply: false, support_role_ids: null, overflow_category_ids: null,
+  is_enabled: true, ai_auto_reply: true, support_role_ids: null, overflow_category_ids: null,
   threading_mode: false, save_transcripts: true,
   channel_name_format: '{panel.name}-{ticket.number}',
   roles_required: null, roles_blocked: null, limit_bypass_roles: null,
@@ -573,11 +573,21 @@ export function Panels() {
                 onClick={async () => {
                   if (!selectedChannel || !guildId) return;
                   try {
-                    await guildService.sendPanelToChannel(guildId, sendingPanel.id, selectedChannel);
+                    await guildService.sendPanelToChannel(
+                      guildId,
+                      sendingPanel.id,
+                      selectedChannel,
+                    );
                     setSendingPanel(null);
-                    alert('✅ Panel sent! Check the channel in Discord.');
-                  } catch {
-                    alert('❌ Failed to send panel. Make sure the bot is online.');
+                    alert(
+                      '✅ Panel queued! It should appear in Discord within a few seconds. If it does not, check that the bot is online and has Send Messages permission in that channel.',
+                    );
+                  } catch (err) {
+                    const msg =
+                      err instanceof Error ? err.message : 'Unknown error';
+                    alert(
+                      `❌ Failed to send panel: ${msg}\n\nEnsure the bot is running and both API and bot containers share the same Redis.`,
+                    );
                   }
                 }}
                 className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50"

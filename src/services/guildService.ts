@@ -1,3 +1,4 @@
+import axios from "axios";
 import { api } from "../lib/api";
 
 export const guildService = {
@@ -134,7 +135,23 @@ export const guildService = {
   },
 
   async sendPanelToChannel(guildId: string, panelId: string, channelId: string): Promise<void> {
-    await api.post(`/guilds/${guildId}/panels/${panelId}/send`, { channel_id: parseInt(channelId) });
+    try {
+      await api.post(`/guilds/${guildId}/panels/${panelId}/send`, {
+        channel_id: channelId,
+      });
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
+        const message =
+          typeof detail === 'string'
+            ? detail
+            : Array.isArray(detail)
+              ? detail.map((d) => d.msg ?? String(d)).join(', ')
+              : err.message;
+        throw new Error(message || 'Request failed');
+      }
+      throw err;
+    }
   },
 
   // Panels
