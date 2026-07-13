@@ -9,9 +9,9 @@ type Props = {
 
 export function DocsSidebar({ sections, activeId, onSelect }: Props) {
   return (
-    <aside className="hidden lg:block w-56 shrink-0">
-      <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
-        <p className="mb-3 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-500">
+    <aside className="hidden lg:block w-56 shrink-0 self-start sticky top-[4.5rem] z-[9]">
+      <div className="max-h-[calc(100vh-4.5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200/80 bg-white/95 px-2 py-4 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-900/95">
+        <p className="mb-3 px-2 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-500">
           Sections
         </p>
         <nav className="space-y-0.5">
@@ -55,7 +55,7 @@ export function DocsMobileNav({
   onSelect,
 }: Props) {
   return (
-    <div className="lg:hidden mb-6">
+    <div className="lg:hidden sticky top-[4.5rem] z-[9] mb-6 -mx-1 bg-bg-base/95 py-2 backdrop-blur-md dark:bg-[#0b1120]/95">
       <label className="block">
         <span className="sr-only">Jump to section</span>
         <select

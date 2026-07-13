@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { FaPlay } from 'react-icons/fa';
 import { TopNav } from '../../components/layout/TopNav';
 import { Footer } from '../../components/layout/Footer';
-import { PageTransition } from '../../components/motion/PageTransition';
 import { DOC_QUICK_START, DOC_SECTIONS } from './docsContent';
 import { DocsCommandCard } from './DocsCommandCard';
 import { DocsMobileNav, DocsSidebar } from './DocsSidebar';
@@ -45,8 +44,7 @@ export function Docs() {
   return (
     <>
       <TopNav currentGuildName={null} />
-      <PageTransition>
-        <div className="min-h-screen bg-bg-base dark:bg-[#0b1120]">
+      <div className="min-h-screen bg-bg-base dark:bg-[#0b1120]">
           {/* Hero */}
           <section className="border-b border-slate-200/80 dark:border-slate-800">
             <div className="mx-auto max-w-6xl px-4 py-12 md:py-16 lg:px-6">
@@ -104,7 +102,7 @@ export function Docs() {
               onSelect={scrollToSection}
             />
 
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 lg:min-h-[calc(100vh-4.5rem)]">
               <DocsMobileNav
                 sections={DOC_SECTIONS}
                 activeId={activeSectionId}
@@ -159,7 +157,6 @@ export function Docs() {
             </div>
           </div>
         </div>
-      </PageTransition>
       <Footer />
     </>
   );
