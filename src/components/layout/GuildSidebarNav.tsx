@@ -61,7 +61,7 @@ const sections: Section[] = [
       {
         id: 'ai-settings',
         label: 'AI Settings',
-        to: (id: string) => `/guilds/${id}/settings`,
+        to: (id: string) => `/guilds/${id}/ai-settings`,
         icon: <FaRobot className="mr-2 w-4 h-4" />,
       },
       {

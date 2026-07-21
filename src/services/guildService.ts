@@ -220,4 +220,33 @@ export const guildService = {
     const res = await api.put<GeneralRules>(`/guilds/${guildId}/contexts/general`, payload);
     return res.data;
   },
+
+  async runAiDiscoveryScan(guildId: string): Promise<AiDiscoveryScanResult> {
+    const res = await api.post<AiDiscoveryScanResult>(
+      `/guilds/${guildId}/ai/discovery/scan`,
+    );
+    return res.data;
+  },
+
+  async runAiDiscoveryExtract(
+    guildId: string,
+    payload: ExtractInput,
+  ): Promise<ExtractOutput> {
+    const res = await api.post<ExtractOutput>(
+      `/guilds/${guildId}/ai/discovery/extract`,
+      payload,
+    );
+    return res.data;
+  },
+
+  async compileGeneralRules(
+    guildId: string,
+    payload: CompileInput,
+  ): Promise<CompileOutput> {
+    const res = await api.post<CompileOutput>(
+      `/guilds/${guildId}/contexts/general/compile`,
+      payload,
+    );
+    return res.data;
+  },
 };

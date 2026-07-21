@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaBrain,
-  FaGlobeAmericas,
   FaPlus,
   FaTrash,
   FaSave,
   FaLayerGroup,
+  FaLock,
 } from "react-icons/fa";
 import { guildService } from "../../services/guildService";
 import {
@@ -41,23 +41,6 @@ const TABS: { id: Tab; label: string; hint: string }[] = [
     hint: "General knowledge entries scoped to this context.",
   },
 ];
-
-const GLOBAL_TAB_HINT =
-  "Rules that apply to every AI reply on this server — tone, safety, escalation.";
-
-function GlobalBadge({ compact = false }: { compact?: boolean }) {
-  return (
-    <span
-      className={`inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 font-display font-semibold uppercase tracking-wide text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300 ${
-        compact
-          ? "px-2 py-0.5 text-[10px]"
-          : "px-2.5 py-0.5 text-[10px]"
-      }`}
-    >
-      Global — all panels
-    </span>
-  );
-}
 
 function TabBar({
   active,
@@ -186,7 +169,7 @@ function ToggleSwitch({
 export function Contexts() {
   const { guildId } = useParams<{ guildId: string }>();
   const qc = useQueryClient();
-  const [selectedId, setSelectedId] = useState<string | null>("general");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("instructions");
   const [instructions, setInstructions] = useState("");
   const [generalInfo, setGeneralInfo] = useState("");
@@ -216,15 +199,17 @@ export function Contexts() {
     contexts.find((c) => c.id === selectedId) ?? contexts[0] ?? null;
 
   useEffect(() => {
-    if (!selectedId && contexts.length > 0) setSelectedId(contexts[0].id);
-  }, [contexts, selectedId]);
+    if (selectedId) return;
+    const panelContexts = contexts.filter((c) => c.id !== generalRules?.id);
+    if (panelContexts.length > 0) setSelectedId(panelContexts[0].id);
+  }, [contexts, generalRules?.id, selectedId]);
 
   useEffect(() => {
-    if (selected && selectedId !== "general") {
+    if (selected && selected.id !== generalRules?.id) {
       setInstructions(selected.instructions ?? "");
       setGeneralInfo(selected.general_info ?? "");
     }
-  }, [selected?.id, selectedId]);
+  }, [selected?.id, generalRules?.id]);
 
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: ["contexts", guildId] });
@@ -256,7 +241,10 @@ export function Contexts() {
     mutationFn: (id: string) => guildService.deleteContext(guildId!, id),
     onSuccess: () => {
       invalidate();
-      setSelectedId("general");
+      const remaining = contexts.filter(
+        (c) => c.id !== selected?.id && c.id !== generalRules?.id,
+      );
+      setSelectedId(remaining[0]?.id ?? null);
     },
   });
 
@@ -284,7 +272,39 @@ export function Contexts() {
 
   const activeTabMeta = TABS.find((t) => t.id === tab);
 
-  if (isLoading) return <PageLoader label="Loading AI contexts…" />;
+  if (isLoading || generalLoading) return <PageLoader label="Loading AI contexts…" />;
+
+  if (generalRules && !generalRules.enabled) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50 to-indigo-50 p-6 shadow-soft sm:p-8 dark:border-slate-700 dark:bg-none dark:bg-slate-900">
+          <h1 className="flex items-center gap-2.5 font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            <FaBrain className="text-sky-500" />
+            AI Contexts
+          </h1>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800">
+            <FaLock className="text-xl" />
+          </div>
+          <h2 className="font-display text-lg font-bold text-slate-900 dark:text-white">
+            Complete AI Settings first
+          </h2>
+          <p className="mx-auto mt-2 max-w-md font-sans text-sm text-slate-500 dark:text-slate-400">
+            General Rules is the foundation every panel context builds on.
+            Configure and activate General Rules in AI Settings to unlock panel
+            contexts.
+          </p>
+          <Link
+            to={`/guilds/${guildId}/ai-settings`}
+            className="mt-6 inline-flex items-center rounded-xl bg-indigo-600 px-5 py-2.5 font-sans text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+          >
+            Go to AI Settings
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -326,45 +346,10 @@ export function Contexts() {
             </p>
 
             <div className="space-y-1.5">
-              <button
-                type="button"
-                onClick={() => setSelectedId("general")}
-                className={`group w-full rounded-xl px-3 py-3 text-left transition-all ${
-                  selectedId === "general"
-                    ? "border border-indigo-200 bg-indigo-50/80 ring-1 ring-indigo-200/60 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:ring-indigo-500/20"
-                    : "border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800"
-                }`}
-              >
-                <div className="flex items-start gap-2.5">
-                  <FaGlobeAmericas
-                    className={`mt-0.5 shrink-0 text-sm ${
-                      selectedId === "general"
-                        ? "text-indigo-500"
-                        : "text-slate-400"
-                    }`}
-                  />
-                  <div className="min-w-0">
-                    <p
-                      className={`truncate font-sans text-sm font-semibold ${
-                        selectedId === "general"
-                          ? "text-indigo-800 dark:text-indigo-200"
-                          : "text-slate-700 dark:text-slate-200"
-                      }`}
-                    >
-                      General Rules
-                    </p>
-                    <div className="mt-1">
-                      <GlobalBadge compact />
-                    </div>
-                  </div>
-                </div>
-              </button>
-
               {contexts
                 .filter((c) => c.id !== generalRules?.id)
                 .map((c) => {
-                  const isActive =
-                    c.id === selected?.id && selectedId !== "general";
+                  const isActive = c.id === selected?.id;
                   return (
                     <button
                       key={c.id}
@@ -438,15 +423,7 @@ export function Contexts() {
         {/* Main panel */}
         <main className="min-w-0 flex-1">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 dark:border-slate-700 dark:bg-slate-900">
-            {selectedId === "general" ? (
-              <GeneralRulesEditor
-                guildId={guildId!}
-                generalRules={generalRules}
-                generalLoading={generalLoading}
-                knowledge={knowledge}
-                knowledgeLoading={knowledgeLoading}
-              />
-            ) : selected ? (
+            {selected ? (
               <>
                 <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
@@ -553,202 +530,6 @@ export function Contexts() {
         )}
       </AnimatePresence>
     </motion.div>
-  );
-}
-
-function GeneralRulesEditor({
-  guildId,
-  generalRules,
-  generalLoading,
-  knowledge,
-  knowledgeLoading,
-}: {
-  guildId: string;
-  generalRules: GeneralRules | undefined;
-  generalLoading: boolean;
-  knowledge: KnowledgeEntry[];
-  knowledgeLoading: boolean;
-}) {
-  const qc = useQueryClient();
-  const [grInstructions, setGrInstructions] = useState(
-    generalRules?.instructions ?? "",
-  );
-  const [grGeneralInfo, setGrGeneralInfo] = useState(
-    generalRules?.general_info ?? "",
-  );
-  const [grEnabled, setGrEnabled] = useState(generalRules?.enabled ?? true);
-  const [grTab, setGrTab] = useState<Tab>("instructions");
-  const [savedFlash, setSavedFlash] = useState(false);
-
-  useEffect(() => {
-    if (generalRules) {
-      setGrInstructions(generalRules.instructions ?? "");
-      setGrGeneralInfo(generalRules.general_info ?? "");
-      setGrEnabled(generalRules.enabled ?? true);
-    }
-  }, [generalRules?.id, generalRules?.context_version]);
-
-  const updateMut = useMutation({
-    mutationFn: (payload: {
-      instructions?: string;
-      general_info?: string;
-      enabled?: boolean;
-    }) => guildService.updateGeneralRules(guildId, payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["general-rules", guildId] });
-      setSavedFlash(true);
-      setTimeout(() => setSavedFlash(false), 2500);
-    },
-  });
-
-  function handleSave() {
-    updateMut.mutate({
-      instructions: grInstructions,
-      general_info: grGeneralInfo,
-      enabled: grEnabled,
-    });
-  }
-
-  const generalKnowledge = knowledge.filter(
-    (k) => k.ai_context_id === generalRules?.id,
-  );
-  const generalProblems = generalKnowledge.filter(
-    (k) => k.section === "problems",
-  );
-  const generalKnowledgeEntries = generalKnowledge.filter(
-    (k) => k.section !== "problems",
-  );
-
-  const activeTabMeta = TABS.find((t) => t.id === grTab);
-
-  if (generalLoading && !generalRules) {
-    return (
-      <div className="space-y-4">
-        <SkeletonLine w="w-48" h="h-8" />
-        <SkeletonList count={3} />
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-              General Rules
-            </h2>
-            <GlobalBadge />
-          </div>
-          <p className="mt-1.5 font-sans text-sm text-slate-500 dark:text-slate-400">
-            Applies to all AI-enabled panels on this server.
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2.5">
-            <span
-              className={`font-sans text-sm font-medium ${
-                grEnabled
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-slate-400"
-              }`}
-            >
-              {grEnabled ? "Active" : "Disabled"}
-            </span>
-            <ToggleSwitch enabled={grEnabled} onChange={setGrEnabled} />
-          </label>
-          <PrimaryButton
-            onClick={handleSave}
-            loading={updateMut.isPending}
-            variant="indigo"
-          >
-            {updateMut.isPending ? "Saving…" : "Save"}
-          </PrimaryButton>
-        </div>
-      </div>
-
-      {!grEnabled && (
-        <div
-          className="mb-5 rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3.5 dark:border-amber-500/30 dark:bg-amber-500/10"
-          role="alert"
-        >
-          <p className="font-sans text-sm font-semibold text-amber-900 dark:text-amber-300">
-            General Rules is currently off
-          </p>
-          <p className="mt-1 font-sans text-xs text-amber-800/80 dark:text-amber-400/80">
-            Server-wide rules are not being applied. Turn on the toggle above to
-            inject them into every AI reply.
-          </p>
-        </div>
-      )}
-
-      <div className="mb-5">
-        <TabBar active={grTab} onChange={setGrTab} accent="indigo" />
-      </div>
-
-      <p className="mb-4 font-sans text-sm text-slate-500 dark:text-slate-400">
-        {grTab === "instructions" ? GLOBAL_TAB_HINT : activeTabMeta?.hint}
-      </p>
-
-      {(grTab === "instructions" || grTab === "general_info") && (
-        <div className="space-y-4">
-          <EditorArea
-            value={grTab === "instructions" ? grInstructions : grGeneralInfo}
-            onChange={
-              grTab === "instructions" ? setGrInstructions : setGrGeneralInfo
-            }
-            placeholder={
-              grTab === "instructions"
-                ? "# General Rules\n\n## Tone & Style\n- Be friendly, professional, concise\n\n## Safety\n- Never promise refunds without approval"
-                : "Company: Your Company Name\nSupport hours: Mon–Fri 9am–6pm UTC\nWebsite: https://example.com"
-            }
-            minHeight="min-h-[320px]"
-          />
-          <div className="flex items-center gap-3">
-            <PrimaryButton
-              onClick={handleSave}
-              loading={updateMut.isPending}
-              variant="indigo"
-            >
-              {updateMut.isPending ? "Saving…" : "Save General Rules"}
-            </PrimaryButton>
-            {savedFlash && (
-              <span className="font-sans text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                Saved successfully
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {grTab === "problems" && generalRules && (
-        knowledgeLoading ? (
-          <SkeletonList count={2} />
-        ) : (
-          <KnowledgeTable
-            entries={generalProblems}
-            label="Common problems & solutions (server-wide)"
-            guildId={guildId}
-            contextId={generalRules.id}
-            section="problems"
-          />
-        )
-      )}
-
-      {grTab === "knowledge" && generalRules && (
-        knowledgeLoading ? (
-          <SkeletonList count={2} />
-        ) : (
-          <KnowledgeTable
-            entries={generalKnowledgeEntries}
-            label="General knowledge entries (server-wide)"
-            guildId={guildId}
-            contextId={generalRules.id}
-            section="knowledge"
-          />
-        )
-      )}
-    </div>
   );
 }
 

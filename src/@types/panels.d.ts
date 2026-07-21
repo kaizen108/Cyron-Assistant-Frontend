@@ -98,3 +98,105 @@ interface GeneralRules {
   general_info: string | null;
   enabled: boolean;
 }
+
+interface AiDiscoveryScanResult {
+  proposed_category: string | null;
+  confidence: number;
+  confidence_tier: 'high' | 'medium' | 'low';
+  method: string;
+  summary: string | null;
+  rationale: string[];
+  signals: string[];
+  category_scores: {
+    selling: number;
+    saas: number;
+    community: number;
+    other: number;
+  };
+  classified_channels: {
+    knowledge: ClassifiedChannel[];
+    announcements: ClassifiedChannel[];
+    transcript: ClassifiedChannel[];
+    ticket_history: ClassifiedChannel[];
+    partnership: ClassifiedChannel[];
+    selling: ClassifiedChannel[];
+  };
+  role_candidates: RoleCandidate[];
+  panels_found: PanelSummary[];
+  description_draft: string | null;
+  partnership_detected: boolean;
+  is_community_server: boolean;
+  voice_text_ratio: { text: number; voice: number; ratio_voice_heavy: boolean };
+  channel_count: number;
+  panel_count: number;
+}
+
+interface ClassifiedChannel {
+  id: string;
+  name: string;
+  category_name: string | null;
+  tags: string[];
+  reason: string | null;
+}
+
+interface RoleCandidate {
+  id: string;
+  name: string;
+  score: number;
+  reason: string | null;
+}
+
+interface PanelSummary {
+  id: string;
+  name: string;
+  button_text: string | null;
+  button_emoji: string | null;
+  support_hours_enabled: boolean;
+  category_hint: string | null;
+}
+
+interface CompileInput {
+  category?: string;
+  server_description?: string;
+  tone?: string;
+  emojis_allowed?: boolean;
+  language_mode?: string;
+  fixed_language?: string;
+  fallback_language?: string;
+  never_rules?: string[];
+  escalation_rules?: string[];
+  escalation_roles?: string[];
+  problem_solutions?: { problem: string; solution: string }[];
+  general_info_extra?: string;
+  payment_info?: string;
+  knowledge_sources?: string[];
+  activate?: boolean;
+}
+
+interface CompileOutput {
+  instructions: string;
+  general_info: string;
+  problems: { problem: string; solution: string }[];
+  knowledge: { title: string; content: string; section: string }[];
+  enabled: boolean;
+  context_id: string | null;
+}
+
+interface ExtractInput {
+  channel_ids?: string[];
+  ticket_channel_ids?: string[];
+  html_contents?: string[];
+  max_problems?: number;
+}
+
+interface ExtractedProblem {
+  problem: string;
+  solution: string;
+  frequency: number;
+}
+
+interface ExtractOutput {
+  problems: ExtractedProblem[];
+  sources_processed: number;
+  message: string | null;
+}

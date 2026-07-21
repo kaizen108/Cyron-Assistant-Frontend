@@ -13,6 +13,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 import { Home } from './routes/home';
 import { Docs } from './routes/docs';
+import { AiSettings } from './routes/ai-settings';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/guilds/:guildId" element={<Settings />} />
           <Route path="/guilds/:guildId/settings" element={<Settings />} />
+          <Route path="/guilds/:guildId/ai-settings" element={<AiSettings />} />
           <Route path="/guilds/:guildId/embed-customization" element={<Settings />} />
           <Route path="/guilds/:guildId/usage-analytics" element={<Settings />} />
           <Route path="/guilds/:guildId/knowledge" element={<Settings />} />
