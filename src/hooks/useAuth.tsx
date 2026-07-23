@@ -22,7 +22,7 @@ interface AuthContextValue {
   loading: boolean;
   loginWithDiscord: () => void;
   logout: () => void;
-  setAuthToken: (token: string) => void;
+  setAuthToken: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -66,10 +66,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     navigate('/', { replace: true });
   };
 
-  const setAuthToken = (token: string) => {
+  const setAuthToken = useCallback(async (token: string) => {
     setToken(token);
-    fetchMe();
-  };
+    setLoading(true);
+    try {
+      const res = await api.get<User>('/auth/me');
+      setUser(res.data);
+    } catch {
+      clearToken();
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return (
     <AuthContext.Provider
